@@ -4,7 +4,7 @@ A React + Django web app that helps a truck driver pick the **safest route** usi
 **forecast weather at the time the truck will actually reach each part of the trip**,
 the **load weight**, and **travel time**.
 
-**Live app:** https://weather-truck-routing-production-175e.up.railway.app · **Walkthrough:** _add Loom link here_
+**Live app:** https://weather-truck-routing-production-175e.up.railway.app · **Walkthrough:** https://www.loom.com/share/e8228cad6c5042eda6b3ada2dd57b91f
 
 ---
 
