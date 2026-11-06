@@ -4,7 +4,7 @@ A React + Django web app that helps a truck driver pick the **safest route** usi
 **forecast weather at the time the truck will actually reach each part of the trip**,
 the **load weight**, and **travel time**.
 
-**Live app:** _add Render URL here_ · **Walkthrough:** _add Loom link here_
+**Live app:** https://weather-truck-routing-production-175e.up.railway.app · **Walkthrough:** _add Loom link here_
 
 ---
 
@@ -26,7 +26,7 @@ the **load weight**, and **travel time**.
 | Backend | Django 5.2 LTS + Django REST Framework | Required Django; serializers validate input |
 | Routing & search | [TomTom](https://developer.tomtom.com) Routing + Search APIs | `travelMode=truck` with gross vehicle weight, traffic-aware times for the departure time, up to 5 alternatives at any distance, per-point travel times for accurate ETAs; free (2,500 req/day, no card) |
 | Weather | [Open-Meteo](https://open-meteo.com) hourly forecast | Free, no key, returns mph and inches, many locations per request |
-| Hosting | Render (Docker), single service | Django serves the API **and** the built React app → one URL, no CORS |
+| Hosting | Railway (Docker), single service | Django serves the API **and** the built React app → one URL, no CORS |
 
 Everything runs on free tiers.
 
@@ -194,13 +194,23 @@ Backend tests cover every threshold boundary, every load rule at its edge (e.g. 
 totals, every ranking tie-breaker, forecast-hour lookup, search labels, request validation, and full API
 runs with TomTom and Open-Meteo mocked (`respx`), both with native alternatives and with the detour fallback.
 
-## Deploy (Render, free)
+## Deploy
+
+The app ships as one Docker image (`Dockerfile`), so any Docker host works. It listens on `$PORT` (default 8000).
+
+**Railway** (used for the live app):
 
 1. Push this repo to GitHub.
-2. Render → **New → Blueprint** → select the repo (uses `render.yaml` and the `Dockerfile`).
-3. Set `TOMTOM_API_KEY` in the service's environment. `DJANGO_SECRET_KEY` is generated automatically.
-4. Free instances sleep after 15 min idle (~1 min cold start). To keep it warm for reviewers, add a free
-   [UptimeRobot](https://uptimerobot.com) or cron-job.org monitor that requests `/api/geocode` every 10 min.
+2. Railway → **New Project → Deploy from GitHub repo** → select the repo. The `Dockerfile` is detected automatically.
+3. Set these service variables:
+   - `TOMTOM_API_KEY`: your TomTom key
+   - `DJANGO_SECRET_KEY`: any long random string
+   - `DEBUG`: `false`
+   - `ALLOWED_HOSTS`: `.up.railway.app,healthcheck.railway.app` (Railway's health checker sends `Host: healthcheck.railway.app`)
+4. **Settings → Networking → Generate Domain**. Set the health check path to `/api/geocode`.
+
+**Render**: `render.yaml` is included. Use **New → Blueprint**, set `TOMTOM_API_KEY`, and the secret key is
+generated automatically.
 
 ## Known limitations
 
