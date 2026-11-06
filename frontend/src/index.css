@@ -1,0 +1,435 @@
+@import 'tailwindcss';
+
+/* `static`: emit every token as a CSS variable, since inline SVG reads them via var() (see lib/theme.ts).
+   The risk colours must match lib/risk.ts, which the map uses; a unit test checks they agree. */
+@theme static {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --color-brand: #3d0000;
+  --color-brand-light: #950101;
+  --color-brand-50: #fff1f1;
+  --color-accent: #ff0000;
+  --color-risk-low: #2e9e5b;
+  --color-risk-moderate: #e3b505;
+  --color-risk-high: #f07c1e;
+  --color-risk-severe: #d6312f;
+  --color-risk-notravel: #6d1f80;
+  --color-risk-unknown: #9aa3ad;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: #f4f6f8;
+  color: #1b2430;
+  font-family: var(--font-sans);
+  font-feature-settings: 'cv11', 'ss01';
+  -webkit-font-smoothing: antialiased;
+}
+
+/* --- Map chrome ---------------------------------------------------------- */
+
+.maplibregl-popup-content {
+  border-radius: 12px;
+  padding: 12px 14px;
+  box-shadow: 0 10px 30px rgb(15 23 42 / 0.18);
+  animation: pop-in 180ms ease-out both;
+}
+
+.maplibregl-ctrl-group {
+  border-radius: 10px !important;
+  box-shadow: 0 4px 14px rgb(15 23 42 / 0.12) !important;
+}
+
+/* The slider spans the map on phones; the scale bar would sit on top of it. */
+@media (max-width: 639px) {
+  .maplibregl-ctrl-scale {
+    display: none;
+  }
+}
+
+/* Origin marker: soft pulse so the start of the trip is easy to spot. */
+.marker-pulse::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 9999px;
+  border: 2px solid var(--color-brand-light);
+  animation: pulse-ring 1.8s ease-out infinite;
+}
+
+/* --- Entrance animations ------------------------------------------------- */
+
+.card-in {
+  animation: card-in 420ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation-delay: calc(var(--i, 0) * 80ms);
+}
+
+.fade-in {
+  animation: fade-in 300ms ease-out both;
+}
+
+.bar-grow {
+  transform-origin: left;
+  animation: bar-grow 700ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation-delay: calc(var(--i, 0) * 80ms + 150ms);
+}
+
+/* --- Landing page -------------------------------------------------------- */
+
+.landing {
+  background: radial-gradient(ellipse at top, rgb(255 0 0 / 0.06), transparent 60%), #ffffff;
+}
+
+/* Routes draw themselves in; --d staggers them. */
+.draw {
+  stroke-dasharray: 700;
+  stroke-dashoffset: 700;
+  animation: draw 1.4s cubic-bezier(0.4, 0, 0.2, 1) var(--d, 0s) forwards;
+}
+.dot {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation:
+    dot-in 400ms cubic-bezier(0.2, 0.8, 0.2, 1) var(--d, 0s) both,
+    dot-pulse 2.4s ease-in-out calc(var(--d, 0s) + 0.4s) infinite;
+}
+.storm {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: storm 4s ease-in-out infinite;
+}
+.float {
+  animation: float 5s ease-in-out infinite;
+}
+.cta {
+  position: relative;
+  overflow: hidden;
+}
+.cta::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 30%, rgb(255 255 255 / 0.45) 50%, transparent 70%);
+  transform: translateX(-120%);
+  animation: shine 3.2s ease-in-out 1.5s infinite;
+}
+
+/* Landing weather: each layer is one repeating tile of flakes or streaks that slides down by exactly
+   one tile height (--tile) and loops, so the whole sky is 3 composited layers rather than one element per particle. */
+.weather {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.weather::before {
+  content: '';
+  position: absolute;
+  inset: calc(var(--tile) * -1) 0 0;
+  background-image: var(--tile-image);
+  animation: weather-fall var(--fall-time) linear infinite;
+}
+.weather-snow-far {
+  --tile: 300px;
+  --tile-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='260' height='300'><circle cx='18' cy='26' r='1.8' fill='white' stroke='%2394a3b8' stroke-opacity='.55' stroke-width='.9'/><circle cx='92' cy='8' r='1.6' fill='white' stroke='%2394a3b8' stroke-opacity='.55' stroke-width='.9'/><circle cx='150' cy='64' r='2.2' fill='white' stroke='%2394a3b8' stroke-opacity='.55' stroke-width='.9'/><circle cx='214' cy='40' r='1.7' fill='white' stroke='%2394a3b8' stroke-opacity='.55' stroke-width='.9'/><circle cx='40' cy='120' r='2.1' fill='white' stroke='%2394a3b8' stroke-opacity='.55' stroke-width='.9'/><circle cx='120' cy='150' r='1.6' fill='white' stroke='%2394a3b8' stroke-opacity='.55' stroke-width='.9'/><circle cx='196' cy='132' r='2' fill='white' stroke='%2394a3b8' stroke-opacity='.55' stroke-width='.9'/><circle cx='70' cy='206' r='1.9' fill='white' stroke='%2394a3b8' stroke-opacity='.55' stroke-width='.9'/><circle cx='176' cy='220' r='1.6' fill='white' stroke='%2394a3b8' stroke-opacity='.55' stroke-width='.9'/></svg>");
+  --fall-time: 6s;
+}
+.weather-snow-near {
+  --tile: 370px;
+  --tile-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='330' height='370'><circle cx='30' cy='60' r='3.2' fill='white' stroke='%2394a3b8' stroke-opacity='.55' stroke-width='.9'/><circle cx='140' cy='24' r='2.6' fill='white' stroke='%2394a3b8' stroke-opacity='.55' stroke-width='.9'/><circle cx='210' cy='150' r='3.4' fill='white' stroke='%2394a3b8' stroke-opacity='.55' stroke-width='.9'/><circle cx='96' cy='196' r='2.8' fill='white' stroke='%2394a3b8' stroke-opacity='.55' stroke-width='.9'/></svg>");
+  --fall-time: 3.6s;
+}
+/* Rain is drawn upright and the layer tilted, so streaks fall along their own slant. */
+.weather-rain {
+  --tile: 230px;
+  --tile-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='170' height='230'><defs><linearGradient id='g' x2='0' y2='1'><stop offset='0' stop-color='%23608cbe' stop-opacity='0'/><stop offset='1' stop-color='%23608cbe' stop-opacity='.75'/></linearGradient></defs><rect x='14' y='10' width='1.5' height='22' rx='.75' fill='url(%23g)'/><rect x='58' y='96' width='1.5' height='18' rx='.75' fill='url(%23g)'/><rect x='96' y='36' width='1.5' height='26' rx='.75' fill='url(%23g)'/><rect x='132' y='130' width='1.5' height='20' rx='.75' fill='url(%23g)'/><rect x='176' y='68' width='1.5' height='24' rx='.75' fill='url(%23g)'/><rect x='40' y='160' width='1.5' height='16' rx='.75' fill='url(%23g)'/></svg>");
+  --fall-time: 0.32s;
+  inset: -25%;
+  transform: rotate(14deg);
+}
+.weather-rain::before {
+  animation-name: rain-fall;
+}
+
+/* Trucks follow the road with CSS Motion Path; the path, timing and direction are set per truck. */
+.road-truck {
+  position: absolute;
+  top: 0;
+  left: 0;
+  offset-rotate: auto;
+  animation: drive-path var(--drive-time) linear var(--drive-delay) infinite;
+}
+
+/* Freeze the landing scene while something covers it (the trip modal), so the overlay's blur
+   is rendered once instead of on every frame. */
+.landing[data-paused] *,
+.landing[data-paused] *::before,
+.landing[data-paused] *::after {
+  animation-play-state: paused !important;
+}
+
+.modal-in {
+  animation: modal-in 280ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+/* --- Truck loader -------------------------------------------------------- */
+
+.loader-backdrop {
+  animation: fade-in 200ms ease-out both;
+}
+.loader-card {
+  animation: pop-in 260ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.step-text {
+  animation: step-in 300ms ease-out both;
+}
+.road-dashes {
+  animation: scroll-40 0.45s linear infinite;
+}
+.drift-slow {
+  animation: scroll-260 9s linear infinite;
+}
+.drift-fast {
+  animation: scroll-260 5s linear infinite;
+}
+.wheel-spin {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: spin 0.45s linear infinite;
+}
+.truck-bounce {
+  animation: bounce 0.6s ease-in-out infinite;
+}
+.speed-lines {
+  animation: speed 0.6s ease-in-out infinite;
+}
+.rain {
+  animation: rain 0.7s linear infinite;
+}
+
+.spinner {
+  animation: spin 0.8s linear infinite;
+}
+
+/* --- Forecast slider ----------------------------------------------------- */
+
+.range {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 9999px;
+  background: linear-gradient(to right, var(--color-brand-light) var(--fill, 0%), #e2e8f0 var(--fill, 0%));
+  cursor: pointer;
+}
+.range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 9999px;
+  background: #fff;
+  border: 3px solid var(--color-brand);
+  box-shadow: 0 2px 6px rgb(15 23 42 / 0.25);
+  transition: transform 120ms ease;
+}
+.range::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+.range::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 9999px;
+  background: #fff;
+  border: 3px solid var(--color-brand);
+  box-shadow: 0 2px 6px rgb(15 23 42 / 0.25);
+}
+.range:focus-visible {
+  outline: 2px solid var(--color-brand-light);
+  outline-offset: 4px;
+}
+
+/* --- Keyframes ----------------------------------------------------------- */
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.97);
+  }
+}
+@keyframes card-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+@keyframes step-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+@keyframes bar-grow {
+  from {
+    transform: scaleX(0);
+  }
+}
+@keyframes scroll-40 {
+  to {
+    transform: translateX(-40px);
+  }
+}
+@keyframes scroll-260 {
+  to {
+    transform: translateX(-260px);
+  }
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes bounce {
+  50% {
+    transform: translateY(-1.5px);
+  }
+}
+@keyframes speed {
+  50% {
+    opacity: 0.3;
+    transform: translateX(-6px);
+  }
+}
+@keyframes rain {
+  from {
+    transform: translateY(-4px);
+    opacity: 0;
+  }
+  40% {
+    opacity: 1;
+  }
+  to {
+    transform: translateY(6px);
+    opacity: 0;
+  }
+}
+@keyframes pulse-ring {
+  from {
+    transform: scale(0.6);
+    opacity: 0.9;
+  }
+  to {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes dot-in {
+  from {
+    opacity: 0;
+    transform: scale(0);
+  }
+}
+@keyframes dot-pulse {
+  50% {
+    transform: scale(1.25);
+  }
+}
+@keyframes storm {
+  50% {
+    transform: scale(1.12);
+    opacity: 0.32;
+  }
+}
+@keyframes float {
+  50% {
+    transform: translateY(-8px);
+  }
+}
+@keyframes shine {
+  0%,
+  60% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(120%);
+  }
+}
+/* Snow sways a little as it falls; it ends where it started sideways, so the loop is seamless. */
+@keyframes weather-fall {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  25% {
+    transform: translate3d(10px, calc(var(--tile) * 0.25), 0);
+  }
+  50% {
+    transform: translate3d(0, calc(var(--tile) * 0.5), 0);
+  }
+  75% {
+    transform: translate3d(-10px, calc(var(--tile) * 0.75), 0);
+  }
+  100% {
+    transform: translate3d(0, var(--tile), 0);
+  }
+}
+@keyframes rain-fall {
+  to {
+    transform: translate3d(0, var(--tile), 0);
+  }
+}
+@keyframes drive-path {
+  from {
+    offset-distance: 0%;
+  }
+  to {
+    offset-distance: 100%;
+  }
+}
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .draw {
+    stroke-dashoffset: 0;
+  }
+  .weather {
+    display: none;
+  }
+  /* Trucks stay parked along the road instead of driving. */
+  .road-truck {
+    animation: none !important;
+    offset-distance: var(--park);
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+  }
+}
+
+/* Browsers without CSS Motion Path would draw every truck at the page's top-left corner. */
+@supports not (offset-path: path('M0 0')) {
+  .road-truck {
+    display: none;
+  }
+}

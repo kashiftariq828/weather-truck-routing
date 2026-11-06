@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: weather-truck-routing
+    runtime: docker
+    plan: free
+    healthCheckPath: /api/geocode
+    envVars:
+      - key: TOMTOM_API_KEY
+        sync: false # set in the Render dashboard
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "false"
+      - key: ALLOWED_HOSTS
+        value: ".onrender.com"
